@@ -2,7 +2,6 @@ import random, sys, json, pandas
 from datetime import datetime
 import numpy as np
 
-
 class TSPSimple(object):
 
     def __init__(self, nCiudades: int, nVehiculos: int, prcMutacion: float, tPoblacion: int, nGeneraciones: int, prcElitismo: float, prcMuestra: float):
@@ -15,18 +14,28 @@ class TSPSimple(object):
         self._nGeneraciones = nGeneraciones
         self._prcMutacion = prcMutacion
         self._prcElitismo = prcElitismo
-        self._Ganancias = np.random.random_integers(500, 2500, size=self._nciudades)
+        self._Ganancias = np.empty(shape=self._nciudades, dtype=float)
         self._Fitness = np.empty(shape=(self._tPoblacion, 2), dtype=float)
-        self._Minutos = np.random.random_integers(30, 120, size=self._nciudades)
+        self._Minutos = np.empty(shape=self._nciudades, dtype=int)
         self._Poblacion = None
         
     def Algotitmo(self):
+
+        self.CargarDatos()
 
         cant_sobrevivientes = int(self._tPoblacion * self._prcElitismo)
         can_mutados = int(self._tPoblacion * self._prcMutacion)
 
         #Inicializar poblacion
-        self._Poblacion = np.random.random_integers(0, 1, size=(self._tPoblacion, self._tIndividuo))
+        #self._Poblacion = np.random.random_integers(0, 1, size=(self._tPoblacion, self._tIndividuo))
+        self._Poblacion = np.empty(shape=(self._tPoblacion, self._tIndividuo), dtype=int)
+        
+        for i in range(self._tPoblacion):
+            for j in range(self._tIndividuo):
+                if random.random() < 0.3:
+                    self._Poblacion[i, j] = 1
+                else:
+                    self._Poblacion[i, j] = 0
         
         #Hacer de acuerdo al numero de generaciones
         for i in range(self._nGeneraciones):
@@ -82,12 +91,10 @@ class TSPSimple(object):
             self._Fitness[bests[i], 1] = sys.maxsize
         
         data = {
-            'index': [],
             'value': []
         }
 
         for i in range(len(bests)):
-            data['index'].append(i + 1)
             data['value'].append(self.toString(bests[i]))
 
         with open("resultado.json", 'w+') as file:
@@ -101,14 +108,32 @@ class TSPSimple(object):
         for i in range(self._tIndividuo):
             res = res + str(self._Poblacion[index, i])
         return res
+    
+    def CargarDatos(self):
+        with open("datos.json", 'r') as file:
+            data = json.load(file)
+
+        for i in range(len(data['minutos'])):
+            self._Ganancias[i] = float(data['ganancias'][i])
+            self._Minutos[i] = int(data['minutos'][i])
 
     def VerResultados(self):
         with open("resultado.json", 'r') as file:
             data = json.load(file)
         
-        for i in range(len(data['value'])):
-            print("Elemento: {} Valor: {}".format(str(i + 1), data['value'][i]))
+        resultado = np.empty(shape=(len(data['value']), self._tIndividuo), dtype=int)
+        fitness = np.empty(shape=(len(data['value']), 2))
 
+        for i in range(len(data['value'])):
+            contador = 0
+            for j in data['value'][i]:
+                resultado[i, contador] = int(j)
+                contador = contador + 1
+            fitness[i, 0] = self.EvaluaGanancia(resultado[i])
+            fitness[i, 1] = self.EvaluaTiempo(resultado[i])
+        
+        for i in range(len(data['value'])):
+            print("Individuo {}: Ganancias: $ {}  Tiempo: {}".format(str(i + 1), str(fitness[i, 0]), str(fitness[i, 1] / 60)))
 
     def Mutar(self, individuo):
         gn_a_mutar = random.randint(0, int(self._tIndividuo * 0.2))
@@ -123,10 +148,20 @@ class TSPSimple(object):
         return individuo
 
     def Cruza(self, padres):
-        lim = int(self._tIndividuo / 2)
-        inicio = random.randint(0, lim)
-        fin = random.randint(lim, self._tIndividuo - 1)
+        first = random.randint(0, self._tIndividuo -1)
+        last = first
+
+        while last == first:
+            last = random.randint(0, self._tIndividuo - 1)
         res = np.empty(shape=(2, self._tIndividuo), dtype=int)
+
+        if last > first:
+            inicio = first
+            fin = last
+        else:
+            inicio = last
+            fin = first
+            
 
         for i in range(0, inicio):
             res[0, i] = padres[0, i]
@@ -223,6 +258,6 @@ class TSPSimple(object):
             cont = cont + 1
         return res
 
-obj = TSPSimple(30, 3, 0.5, 50, 500, 0.09, 0.25)
-#obj.Algotitmo()
-#obj.VerResultados()
+obj = TSPSimple(30, 3, 0.5, 50, 5, 0.09, 0.25)
+obj.Algotitmo()
+obj.VerResultados()

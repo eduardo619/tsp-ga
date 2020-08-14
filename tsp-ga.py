@@ -102,8 +102,16 @@ class TSPSimple(object):
             res = res + str(self._Poblacion[index, i])
         return res
 
+    def VerResultados(self):
+        with open("resultado.json", 'r') as file:
+            data = json.load(file)
+        
+        for i in range(len(data['value'])):
+            print("Elemento: {} Valor: {}".format(str(i + 1), data['value'][i]))
+
+
     def Mutar(self, individuo):
-        gn_a_mutar = random.randint(0, 5)
+        gn_a_mutar = random.randint(0, int(self._tIndividuo * 0.2))
 
         for i in range(gn_a_mutar):
             x = random.randint(0, self._tIndividuo - 1)
@@ -149,7 +157,7 @@ class TSPSimple(object):
             mejor_fit = fitness[pos_mejor]
 
             for j in range(self._tMuestra):
-                if fitness[j, 0] > mejor_fit[0] and fitness[j, 1] < mejor_fit[1]:
+                if fitness[j, 0] > mejor_fit[0] or fitness[j, 1] < mejor_fit[1]:
                     pos_mejor = j
                     mejor_fit = fitness[j]
             
@@ -176,7 +184,7 @@ class TSPSimple(object):
             mejor_fit = self._Fitness[mejor_pos]
 
             for j in range(self._tPoblacion):
-                if self._Fitness[j, 0] > mejor_fit[0] and self._Fitness[j, 1] < mejor_fit[1]:
+                if self._Fitness[j, 0] > mejor_fit[0] or self._Fitness[j, 1] < mejor_fit[1]:
                     mejor_pos = j
                     mejor_fit = self._Fitness[j]
             
@@ -216,4 +224,5 @@ class TSPSimple(object):
         return res
 
 obj = TSPSimple(30, 3, 0.5, 50, 500, 0.09, 0.25)
-obj.Algotitmo()
+#obj.Algotitmo()
+#obj.VerResultados()

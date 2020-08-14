@@ -17,6 +17,10 @@ class TSPSimple(object):
         self._Fitness = np.empty(shape=(self._tPoblacion, 2), dtype=float)
         self._Minutos = np.empty(shape=self._nciudades, dtype=int)
         self._Poblacion = np.empty(shape=(self._tPoblacion, self._tIndividuo), dtype=int)
+        
+        for i in range(self._nciudades):
+            self._Ganancias[i] = random.randrange(start=500, stop=2500)
+            self._Minutos[i] = random.randrange(start=60, stop=900)
 
     def Algotitmo(self):
 
@@ -40,7 +44,7 @@ class TSPSimple(object):
                 self._Fitness[j, 0] = self.EvaluaGanancia(self._Poblacion[j])
                 self._Fitness[j, 1] = self.EvaluaTiempo(self._Poblacion[j])
 
-                sobrevivientes = self.SelectSobrevivientes(cant_sobrevivientes)
+            sobrevivientes = self.SelectSobrevivientes(cant_sobrevivientes)
 
             for j in range(cant_sobrevivientes):
                 nueva_generacion[j] = sobrevivientes[j]
@@ -55,13 +59,13 @@ class TSPSimple(object):
                     nueva_generacion[j] = hijos[1]
 
             for j in range(can_mutados):
-                x = random.randint(0, self._tPoblacion)
+                x = random.randint(0, self._tPoblacion - 1)
                 nueva_generacion[x] = self.Mutar(nueva_generacion[x])
             
             self._Poblacion = nueva_generacion
 
     def Mutar(self, individuo):
-        x = random.randint(0, self._tIndividuo)
+        x = random.randint(0, self._tIndividuo - 1)
         if individuo[x] == 1:
             individuo[x] = 0
         else:
@@ -72,7 +76,7 @@ class TSPSimple(object):
     def Cruza(self, padres):
         lim = int(self._tIndividuo / 2)
         inicio = random.randint(0, lim)
-        fin = random.randint(lim, self._tIndividuo)
+        fin = random.randint(lim, self._tIndividuo - 1)
         res = np.empty(shape=(2, self._tIndividuo), dtype=int)
 
         for i in range(0, inicio):
@@ -104,7 +108,7 @@ class TSPSimple(object):
             mejor_fit = fitness[pos_mejor]
 
             for j in range(self._tMuestra):
-                if fitness[j, 0] < mejor_fit[0] or fitness[j, 1] < mejor_fit[1]:
+                if fitness[j, 0] > mejor_fit[0] and fitness[j, 1] < mejor_fit[1]:
                     pos_mejor = j
                     mejor_fit = fitness[j]
             
@@ -119,7 +123,7 @@ class TSPSimple(object):
     def TomarMuestra(self):
         res = np.empty(shape=(self._tMuestra, self._tIndividuo), dtype=int)
         for i in range(self._tMuestra):
-            pos = random.randint(0, self._tPoblacion)
+            pos = random.randint(0, self._tPoblacion - 1)
             res[i] = self._Poblacion[pos]
         return res
     
@@ -131,7 +135,7 @@ class TSPSimple(object):
             mejor_fit = self._Fitness[mejor_pos]
 
             for j in range(self._tPoblacion):
-                if self._Fitness[j, 0] < mejor_fit[0] or self._Fitness[j, 1] < mejor_fit[1]:
+                if self._Fitness[j, 0] > mejor_fit[0] and self._Fitness[j, 1] < mejor_fit[1]:
                     mejor_pos = j
                     mejor_fit = self._Fitness[j]
             
@@ -143,14 +147,24 @@ class TSPSimple(object):
 
     def EvaluaGanancia(self, vector):
         res = 0.00
-        for i in range(vector):
+        cont = 0
+        for i in range(len(vector)):
+            if cont == self._nciudades:
+                cont = 0
             if vector[i] == 1:
-                res = res + self._Ganancias[i]
+                res = res + self._Ganancias[cont]
+            cont = cont + 1
         return res
 
     def EvaluaTiempo(self, vector):
         res = 0
-        for i in range(vector):
+        cont = 0
+        for i in range(len(vector)):
+            if cont == self._nciudades:
+                cont = 0
             if vector[i] == 1:
-                res = res + self._Minutos[i]
+                res = res + self._Minutos[cont]
         return res
+
+obj = TSPSimple(30, 3, 0.5, 50, 500, 0.09, 0.25)
+obj.Algotitmo()

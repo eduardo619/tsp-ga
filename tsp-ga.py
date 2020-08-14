@@ -1,10 +1,12 @@
-import random, sys
+import random, sys, json
+from datetime import datetime
 import numpy as np
 
 
 class TSPSimple(object):
 
     def __init__(self, nCiudades: int, nVehiculos: int, prcMutacion: float, tPoblacion: int, nGeneraciones: int, prcElitismo: float, prcMuestra: float):
+        self._Start = datetime.now()
         self._nciudades = nCiudades
         self._nVehiculos = nVehiculos
         self._tIndividuo = self._nciudades * self._nVehiculos
@@ -13,24 +15,18 @@ class TSPSimple(object):
         self._nGeneraciones = nGeneraciones
         self._prcMutacion = prcMutacion
         self._prcElitismo = prcElitismo
-        self._Ganancias = np.empty(shape=self._nciudades, dtype=float)
+        self._Ganancias = np.random.random_integers(500, 2500, size=self._nciudades)
         self._Fitness = np.empty(shape=(self._tPoblacion, 2), dtype=float)
-        self._Minutos = np.empty(shape=self._nciudades, dtype=int)
-        self._Poblacion = np.empty(shape=(self._tPoblacion, self._tIndividuo), dtype=int)
+        self._Minutos = np.random.random_integers(50, 360, size=self._nciudades)
+        self._Poblacion = None
         
-        for i in range(self._nciudades):
-            self._Ganancias[i] = random.randrange(start=500, stop=2500)
-            self._Minutos[i] = random.randrange(start=60, stop=900)
-
     def Algotitmo(self):
 
         cant_sobrevivientes = int(self._tPoblacion * self._prcElitismo)
         can_mutados = int(self._tPoblacion * self._prcMutacion)
 
         #Inicializar poblacion
-        for i in range(self._tPoblacion):
-            for j in range(self._tIndividuo):
-                self._Poblacion[i, j] = random.randint(0, 1)
+        self._Poblacion = np.random.random_integers(0, 1, size=(self._tPoblacion, self._tIndividuo))
         
         #Hacer de acuerdo al numero de generaciones
         for i in range(self._nGeneraciones):
@@ -63,13 +59,51 @@ class TSPSimple(object):
                 nueva_generacion[x] = self.Mutar(nueva_generacion[x])
             
             self._Poblacion = nueva_generacion
+            print("Generacion: {}".format(i + 1))
+
+        self.SaveBests(5)
+    
+    def SaveBests(self, cantidad):
+        bests = np.empty(shape=cantidad, dtype=int)
+        for i in range(self._tPoblacion):
+                self._Fitness[i, 0] = self.EvaluaGanancia(self._Poblacion[i])
+                self._Fitness[i, 1] = self.EvaluaTiempo(self._Poblacion[i])
+        
+        for i in range(cantidad):
+            mejor = 0
+            mejor_fit = self._Fitness[mejor]
+
+            for j in range(self._tPoblacion):
+                if self._Fitness[j, 0] > mejor_fit[0] and self._Fitness[j, 1] < mejor_fit[1]:
+                    mejor = j
+                    mejor_fit = self._Fitness[mejor]
+            bests[i] = mejor
+            self._Fitness[bests[i], 0] = sys.float_info.min
+            self._Fitness[bests[i], 1] = sys.maxsize
+
+        data = {
+            'index': [],
+            'value': []
+        }
+        for i in range(cantidad):
+            data['index'].append(i)
+            data['value'].append(self._Poblacion[bests[i]])
+
+        with open("resultado.json", 'w+') as file:
+            json.dump(data, file, indent=4)
+
+        time_elapsed = datetime.now() - self._Start
+        print("Tiempo de ejecución: (hh:mm:ss.ms) {}".format(time_elapsed))
 
     def Mutar(self, individuo):
-        x = random.randint(0, self._tIndividuo - 1)
-        if individuo[x] == 1:
-            individuo[x] = 0
-        else:
-            individuo[x] = 1
+        gn_a_mutar = random.randint(0, 5)
+
+        for i in range(gn_a_mutar):
+            x = random.randint(0, self._tIndividuo - 1)
+            if individuo[x] == 1:
+                individuo[x] = 0
+            else:
+                individuo[x] = 1
             
         return individuo
 
@@ -113,11 +147,11 @@ class TSPSimple(object):
                     mejor_fit = fitness[j]
             
             posicion_padres[i] = pos_mejor
-            fitness[posicion_padres[i], 0] = sys.float_info.max
+            fitness[posicion_padres[i], 0] = sys.float_info.min
             fitness[posicion_padres[i], 1] = sys.maxsize
         
         res[0] = muestra[posicion_padres[0]]
-        res[0] = muestra[posicion_padres[1]]
+        res[1] = muestra[posicion_padres[1]]
         return res
 
     def TomarMuestra(self):
@@ -140,7 +174,7 @@ class TSPSimple(object):
                     mejor_fit = self._Fitness[j]
             
             res[i] = self._Poblacion[mejor_pos]
-            self._Fitness[mejor_pos, 0] = sys.float_info.max
+            self._Fitness[mejor_pos, 0] = sys.float_info.min
             self._Fitness[mejor_pos, 1] = sys.maxsize
         
         return res
@@ -158,13 +192,20 @@ class TSPSimple(object):
 
     def EvaluaTiempo(self, vector):
         res = 0
+        horas = 0.00
+        cumplen = 0
         cont = 0
         for i in range(len(vector)):
             if cont == self._nciudades:
+                t_horas = horas / 60
+                if t_horas < 8:
+                    cumplen = cumplen + 1
                 cont = 0
+                horas = 0.00
             if vector[i] == 1:
                 res = res + self._Minutos[cont]
+                horas = horas + self._Minutos[cont]
         return res
 
-obj = TSPSimple(30, 3, 0.5, 50, 500, 0.09, 0.25)
+obj = TSPSimple(30, 3, 0.5, 50, 5, 0.09, 0.25)
 obj.Algotitmo()

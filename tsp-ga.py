@@ -1,4 +1,4 @@
-import random, sys, json
+import random, sys, json, pandas
 from datetime import datetime
 import numpy as np
 
@@ -17,7 +17,7 @@ class TSPSimple(object):
         self._prcElitismo = prcElitismo
         self._Ganancias = np.random.random_integers(500, 2500, size=self._nciudades)
         self._Fitness = np.empty(shape=(self._tPoblacion, 2), dtype=float)
-        self._Minutos = np.random.random_integers(50, 360, size=self._nciudades)
+        self._Minutos = np.random.random_integers(30, 120, size=self._nciudades)
         self._Poblacion = None
         
     def Algotitmo(self):
@@ -80,20 +80,27 @@ class TSPSimple(object):
             bests[i] = mejor
             self._Fitness[bests[i], 0] = sys.float_info.min
             self._Fitness[bests[i], 1] = sys.maxsize
-
+        
         data = {
             'index': [],
             'value': []
         }
-        for i in range(cantidad):
-            data['index'].append(i)
-            data['value'].append(self._Poblacion[bests[i]])
+
+        for i in range(len(bests)):
+            data['index'].append(i + 1)
+            data['value'].append(self.toString(bests[i]))
 
         with open("resultado.json", 'w+') as file:
             json.dump(data, file, indent=4)
 
         time_elapsed = datetime.now() - self._Start
         print("Tiempo de ejecución: (hh:mm:ss.ms) {}".format(time_elapsed))
+
+    def toString(self, index: int):
+        res = ""
+        for i in range(self._tIndividuo):
+            res = res + str(self._Poblacion[index, i])
+        return res
 
     def Mutar(self, individuo):
         gn_a_mutar = random.randint(0, 5)
@@ -205,7 +212,8 @@ class TSPSimple(object):
             if vector[i] == 1:
                 res = res + self._Minutos[cont]
                 horas = horas + self._Minutos[cont]
+            cont = cont + 1
         return res
 
-obj = TSPSimple(30, 3, 0.5, 50, 5, 0.09, 0.25)
+obj = TSPSimple(30, 3, 0.5, 50, 500, 0.09, 0.25)
 obj.Algotitmo()

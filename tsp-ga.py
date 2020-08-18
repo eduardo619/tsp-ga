@@ -34,7 +34,9 @@ class TSPSimple(object):
                     self._Poblacion[i, j] = 1
                 else:
                     self._Poblacion[i, j] = 0
-        
+
+        self.MoonCrossover()
+
         #Hacer de acuerdo al numero de generaciones
         for i in range(self._nGeneraciones):
             nueva_generacion = np.empty(shape=(self._tPoblacion, self._tIndividuo), dtype=int)
@@ -141,6 +143,31 @@ class TSPSimple(object):
         
         for i in range(len(data['value'])):
             print("Individuo {}: Ganancias: $ {}  Tiempo: {}".format(str(i + 1), str(fitness[i, 0]), str(fitness[i, 1] / 60)))
+
+    def MoonCrossover(self):
+        k = 0
+        Pa = self._Poblacion[random.randint(0, self._tPoblacion - 1)]
+        Pb = self._Poblacion[random.randint(0, self._tPoblacion - 1)]
+        
+        inicio = random.randint(0, self._tIndividuo - 1)
+        fin = random.randint(0, self._tIndividuo - 1)
+        aux = fin
+        
+        if aux < inicio:
+            fin = inicio
+            inicio = aux
+        
+        osp = Pa[inicio:fin]
+
+        if len(osp) != self._tIndividuo:
+            sub_Pb = self.SubRestante(Pa, inicio, fin, self._tIndividuo - len(osp))
+            
+    def SubRestante(self, Pa, inicio, fin, tamanio):
+        res = np.empty(shape=tamanio, dtype=int)
+        res[0: inicio] = Pa[0:inicio]
+        res[inicio: tamanio] = Pa[fin: self._tIndividuo]
+
+        return res
 
     def Mutar(self, individuo):
         gn_a_mutar = random.randint(0, int(self._tIndividuo * 0.2))

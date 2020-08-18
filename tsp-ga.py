@@ -21,16 +21,14 @@ class TSPSimple(object):
         
     def Algotitmo(self):
 
+        self._Poblacion = np.empty(shape=(self._tPoblacion, self._tIndividuo), dtype=int)
         self.CargarDatos()
 
         cant_sobrevivientes = int(self._tPoblacion * self._prcElitismo)
         can_mutados = int(self._tPoblacion * self._prcMutacion)
 
         #Inicializar poblacion
-        #self._Poblacion = np.random.random_integers(0, 1, size=(self._tPoblacion, self._tIndividuo))
-        self._Poblacion = np.empty(shape=(self._tPoblacion, self._tIndividuo), dtype=int)
-        
-        for i in range(self._tPoblacion):
+        for i in range(5, self._tPoblacion):
             for j in range(self._tIndividuo):
                 if random.random() < 0.3:
                     self._Poblacion[i, j] = 1
@@ -116,6 +114,15 @@ class TSPSimple(object):
         for i in range(len(data['minutos'])):
             self._Ganancias[i] = float(data['ganancias'][i])
             self._Minutos[i] = int(data['minutos'][i])
+
+        with open("resultado.json", 'r') as file:
+            dat = json.load(file)
+        
+        for i in range(len(dat['value'])):
+            contador = 0
+            for j in dat['value'][i]:
+                self._Poblacion[i, contador] = int(j)
+                contador = contador + 1
 
     def VerResultados(self):
         with open("resultado.json", 'r') as file:
@@ -258,6 +265,6 @@ class TSPSimple(object):
             cont = cont + 1
         return res
 
-obj = TSPSimple(30, 3, 0.5, 50, 5, 0.09, 0.25)
+obj = TSPSimple(30, 3, 0.5, 50, 500, 0.09, 0.25)
 obj.Algotitmo()
 obj.VerResultados()

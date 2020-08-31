@@ -155,13 +155,20 @@ class TSPSimple(object):
         
         if aux < inicio:
             fin = inicio
-            inicio = aux
+            inicio = aux 
         
         osp = Pa[inicio:fin]
 
         if len(osp) != self._tIndividuo:
             sub_Pb = self.SubRestante(Pa, inicio, fin, self._tIndividuo - len(osp))
-            
+        
+        i = 1, k = 0
+        while len(osp) != self._tIndividuo:
+            if i == 1:
+                i = self._tIndividuo + 1
+            i = i - 1
+            k = k + 1
+
     def SubRestante(self, Pa, inicio, fin, tamanio):
         res = np.empty(shape=tamanio, dtype=int)
         res[0: inicio] = Pa[0:inicio]
